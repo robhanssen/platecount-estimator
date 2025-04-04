@@ -70,7 +70,7 @@ md"### Plate count estimation"
 
 # ╔═╡ 0a54a983-42ee-4d2f-a10a-d3d304b4662d
 
-md"The number of plates in a column can be calculated from distilling a mixture of iso-octane and n-heptane. The plate count can be estimated via Fenske's equation $^{[1-2]}$:
+md"The number of plates in a column can be calculated from distilling a mixture of iso-octane and n-heptane. The plate count can be estimated via Fenske's equation $^{[1-3]}$:
 
 $N = \frac{log(\frac{C_{nheptane}^{head}}{C_{nheptane}^{pot}} \times \frac{C_{isooctane}^{pot}}{C_{isooctane}^{head}})}{log(\alpha_{avg})} - 1$
 
@@ -93,7 +93,7 @@ md"Vapor pressure of a liquid can be modelled by a modified VLE expression."
 md" $log(p) = A + \frac{B}{T} + C \times log(T) + D \times T^E$"
 
 # ╔═╡ 7583d8f3-4953-4dba-97b7-65373036f197
-md"where $p$ is pressure, $T$ is is temperature in Kelvin and $A$ through $E$ are empirical parameters.$^{[3]}$"
+md"where $p$ is pressure, $T$ is is temperature in Kelvin and $A$ through $E$ are empirical parameters.$^{[4]}$"
 
 # ╔═╡ 86d8b77c-085d-4986-806d-ec99ec7e2292
 begin
@@ -135,11 +135,13 @@ md"## References"
 
 # ╔═╡ 7b2d9351-4144-4c21-811c-ebc5f1b91934
 md"
-[1] Fenske, Ind. Eng. Chem., 24, 482 (1932).
+[1] Fenske, Ind. Eng. Chem. 1932, 24, 5, 482–485 [DOI link](https://doi.org/10.1021/ie50269a003)
 
-[2] Gilliland, Ind. Eng. Chem., 32(9), 1220 (1940)
+[2] Gilliland, Ind. Eng. Chem. 1940, 32, 9, 1220–1223 [DOI Link](https://doi.org/10.1021/ie50369a035)
 
-[3] ChemCad 5.00 Library"
+[3] [Fenske's Equation (wikipedia)](https://en.wikipedia.org/wiki/Fenske_equation)
+ 
+[4] ChemCad 5.00 Library"
 
 
 
