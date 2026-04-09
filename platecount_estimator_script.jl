@@ -2,10 +2,10 @@
 # enter results here
 #
 t_head_c = 100
-t_pot_c = 102
-isooctane_head = 45
-isooctane_pot = 56
-p_atmos = 760
+t_pot_c = 100.6
+isooctane_head = 45.8
+isooctane_pot = 56.1
+p_atmos = 750
 #
 # enter results here
 #
@@ -25,12 +25,13 @@ const Pressure = Dict(
     "bar" => 1e-5)
 
 const Antoine = Dict(
-    "nheptane" => [154.62, -8793.1, -21.684, 0.023916, 1],
-    "isooctane" => [120.81, -7550, -16.111, 0.017099, 1]
+    "nheptane" => [154.62, -8793.1, -21.684, 0.023916, 1, 100.21],
+    "isooctane" => [120.81, -7550, -16.111, 0.017099, 1, 114.23]
 )
 
+
 function print_antoine(molecule)
-    s =  'α' :'ε'  
+    s = ['α':'ε'..., 'M']
     t = ""
     [t *= string(s[i]) * " = " * string(j) * "; " for (i, j) in enumerate(Antoine[molecule])]
     return strip(t)
@@ -44,11 +45,31 @@ function vapor(t, params, unit="mmHg")
     return p
 end
 
+"""
+    mole_fraction(wt_fraction, Mw)
+
+    function to calculate mol fractions in a binary mixture
+"""
+function mole_fraction(wt_fraction, Mw)
+    mole1 = wt_fraction / Mw[1]
+    mole2 = (100 - wt_fraction) / Mw[2]
+    return 100 * mole1 / (mole1 + mole2)
+end
+
+
 α_head = vapor(kelvin(t_head_c), Antoine["nheptane"]) / vapor(kelvin(t_head_c), Antoine["isooctane"])
 α_pot = vapor(kelvin(t_pot_c), Antoine["nheptane"]) / vapor(kelvin(t_pot_c), Antoine["isooctane"])
-α_vol = √(α_head *  α_pot)
+α_vol = √(α_head * α_pot)
 
-plates = -1 + log((100 - isooctane_head) / (100 - isooctane_pot) * isooctane_pot / isooctane_head) / log(α_vol)
+
+isooctane_head_mole, isooctane_pot_mole = mole_fraction.(
+    (isooctane_head, isooctane_pot),
+    Ref(
+        [Antoine["isooctane"][6],
+        Antoine["nheptane"][6]])
+)
+
+plates = -1 + log((100 - isooctane_head_mole) / (100 - isooctane_pot_mole) * isooctane_pot_mole / isooctane_head_mole) / log(α_vol)
 
 plate_out = round(plates, digits=2)
 
@@ -68,7 +89,7 @@ isooctane_vp = vapor.(kelvin.(temp_range), Ref(Antoine["isooctane"]))
 h = temp_range[minimum(findall(heptane_vp .> p_atmos))]
 o = temp_range[minimum(findall(isooctane_vp .> p_atmos))]
 
-
+``
 plot(
     temp_range, heptane_vp,
     legend=false, color=:red,
