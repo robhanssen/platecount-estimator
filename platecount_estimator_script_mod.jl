@@ -3,8 +3,8 @@
 #
 t_head_c = 100
 t_pot_c = 100.6
-isooctane_head = 58.49
-isooctane_pot =  60.98
+isooctane_head = 45.8
+isooctane_pot = 56.1
 p_atmos = 750
 #
 # enter results here
@@ -24,14 +24,20 @@ const Pressure = Dict(
     "mbar" => 1e-2,
     "bar" => 1e-5)
 
+# const Antoine = Dict(
+#     "nheptane" => [154.62, -8793.1, -21.684, 0.023916, 1, 100.21],
+#     "isooctane" => [120.81, -7550, -16.111, 0.017099, 1, 114.23]
+# )
+
+
 const Antoine = Dict(
-    "nheptane" => [154.62, -8793.1, -21.684, 0.023916, 1, 100.21],
-    "isooctane" => [120.81, -7550, -16.111, 0.017099, 1, 114.23]
+    "nheptane_alt" => [6.9024, 1268.115, 216.9, 100.21],
+    "isooctane_alt" => [6.81189, 1257.84, 220.74, 114.23] 
 )
 
 
 function print_antoine(molecule)
-    s = ['α':'ε'..., 'M']
+    s =  ['α':'γ'..., 'M'] 
     t = ""
     [t *= string(s[i]) * " = " * string(j) * "; " for (i, j) in enumerate(Antoine[molecule])]
     return strip(t)
@@ -40,34 +46,23 @@ end
 kelvin(T) = T + KelvinOffset
 
 function vapor(t, params, unit="mmHg")
-    α, β, γ, δ, ε = params
-    p = exp(α + β / t + γ * log(t) + δ * t^ε) * Pressure[unit]
+    α, β, γ, M = params
+    p = 10^(α - β / (t + γ))
     return p
 end
 
-"""
-    mole_fraction(wt_fraction, Mw)
-
-    function to calculate mol fractions in a binary mixture
-"""
-function mole_fraction(wt_fraction, Mw)
-    mole1 = wt_fraction / Mw[1]
-    mole2 = (100 - wt_fraction) / Mw[2]
+function mole_fraction(wt_fract, MWS)
+    mole1 = wt_fract / MWS[1]
+    mole2 = (100 - wt_fract) / MWS[2]
     return 100 * mole1 / (mole1 + mole2)
 end
 
+isooctane_head_mole = mole_fraction(isooctane_head, [Antoine["isooctane_alt"][4], Antoine["nheptane_alt"][4]])
+isooctane_pot_mole= mole_fraction(isooctane_pot, [Antoine["isooctane_alt"][4], Antoine["nheptane_alt"][4]])
 
-α_head = vapor(kelvin(t_head_c), Antoine["nheptane"]) / vapor(kelvin(t_head_c), Antoine["isooctane"])
-α_pot = vapor(kelvin(t_pot_c), Antoine["nheptane"]) / vapor(kelvin(t_pot_c), Antoine["isooctane"])
-α_vol = √(α_head * α_pot)
-
-
-isooctane_head_mole, isooctane_pot_mole = mole_fraction.(
-    (isooctane_head, isooctane_pot),
-    Ref(
-        [Antoine["isooctane"][6],
-        Antoine["nheptane"][6]])
-)
+α_head = vapor(t_head_c, Antoine["nheptane_alt"]) / vapor(t_head_c, Antoine["isooctane_alt"])
+α_pot = vapor(t_pot_c, Antoine["nheptane_alt"]) / vapor(t_pot_c, Antoine["isooctane_alt"])
+α_vol = √(α_head *  α_pot)
 
 plates = -1 + log((100 - isooctane_head_mole) / (100 - isooctane_pot_mole) * isooctane_pot_mole / isooctane_head_mole) / log(α_vol)
 
@@ -75,21 +70,21 @@ plate_out = round(plates, digits=2)
 
 print("Plate count: ", plate_out)
 
-nhep = print_antoine("nheptane")
-isooct = print_antoine("isooctane")
+nhep = print_antoine("nheptane_alt")
+isooct = print_antoine("isooctane_alt")
 
 
 
 
 temp_range = 90:0.01:110
-heptane_vp = vapor.(kelvin.(temp_range), Ref(Antoine["nheptane"]))
-isooctane_vp = vapor.(kelvin.(temp_range), Ref(Antoine["isooctane"]))
+heptane_vp = vapor.(temp_range, Ref(Antoine["nheptane_alt"]))
+isooctane_vp = vapor.(temp_range, Ref(Antoine["isooctane_alt"])) 
 
 # approximate boiling points at pressure
 h = temp_range[minimum(findall(heptane_vp .> p_atmos))]
 o = temp_range[minimum(findall(isooctane_vp .> p_atmos))]
 
-``
+
 plot(
     temp_range, heptane_vp,
     legend=false, color=:red,
